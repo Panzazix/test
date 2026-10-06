@@ -1,0 +1,122 @@
+Option Explicit
+
+Sub GeneraTurni2027()
+
+    Dim ws As Worksheet
+    Dim ultimaRiga As Long
+    Dim r As Long
+    Dim rInizio As Long
+    Dim dataRiga As Date
+    Dim settimane As Long
+    
+    Dim turno1 As String
+    Dim turno2 As String
+    Dim turno3 As String
+    
+    Dim temp As String
+    
+    Set ws = ActiveSheet
+    
+    ' Cerca il 4 gennaio 2027 nella colonna A
+    For r = 1 To ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+        
+        If IsDate(ws.Cells(r, "A").Value) Then
+            
+            If CDate(ws.Cells(r, "A").Value) = DateSerial(2027, 1, 4) Then
+                rInizio = r
+                Exit For
+            End If
+            
+        End If
+        
+    Next r
+    
+    ' Controlla che il 4 gennaio sia stato trovato
+    If rInizio = 0 Then
+        MsgBox "Non trovo il 04/01/2027 nella colonna A.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Legge i turni iniziali dalla riga del 4 gennaio
+    turno1 = Trim(ws.Cells(rInizio, "C").Value)
+    turno2 = Trim(ws.Cells(rInizio, "D").Value)
+    turno3 = Trim(ws.Cells(rInizio, "E").Value)
+    
+    ' Controlla che siano presenti i tre nomi
+    If turno1 = "" Or turno2 = "" Or turno3 = "" Then
+        MsgBox "Nella riga del 04/01/2027 devono essere presenti i tre nomi dei turni.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Ultima riga del calendario
+    ultimaRiga = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Application.ScreenUpdating = False
+    
+    ' Scorre tutte le righe dal 4 gennaio in poi
+    For r = rInizio To ultimaRiga
+        
+        If IsDate(ws.Cells(r, "A").Value) Then
+            
+            dataRiga = CDate(ws.Cells(r, "A").Value)
+            
+            ' Solo date dal 4 gennaio 2027 in poi
+            If dataRiga >= DateSerial(2027, 1, 4) Then
+                
+                ' Giorno della settimana
+                ' 1 = Lunedì ... 7 = Domenica
+                If Weekday(dataRiga, vbMonday) <> 7 Then
+                    
+                    ' Se la riga NON è una festività,
+                    ' assegna i turni
+                    If LCase(Trim(ws.Cells(r, "C").Value)) <> "festività" _
+                    And LCase(Trim(ws.Cells(r, "D").Value)) <> "festività" _
+                    And LCase(Trim(ws.Cells(r, "E").Value)) <> "festività" Then
+                        
+                        ' Calcola la settimana rispetto al 4 gennaio
+                        settimane = DateDiff("d", DateSerial(2027, 1, 4), dataRiga) \ 7
+                        
+                        ' Rotazione ogni 3 settimane
+                        Select Case settimane Mod 3
+                        
+                            Case 0
+                                ' 1° TANSINI
+                                ' 2° VENTURA
+                                ' 3° RUSSO
+                                ws.Cells(r, "C").Value = turno1
+                                ws.Cells(r, "D").Value = turno2
+                                ws.Cells(r, "E").Value = turno3
+                                
+                            Case 1
+                                ' 1° VENTURA
+                                ' 2° RUSSO
+                                ' 3° TANSINI
+                                ws.Cells(r, "C").Value = turno2
+                                ws.Cells(r, "D").Value = turno3
+                                ws.Cells(r, "E").Value = turno1
+                                
+                            Case 2
+                                ' 1° RUSSO
+                                ' 2° TANSINI
+                                ' 3° VENTURA
+                                ws.Cells(r, "C").Value = turno3
+                                ws.Cells(r, "D").Value = turno1
+                                ws.Cells(r, "E").Value = turno2
+                        
+                        End Select
+                        
+                    End If
+                    
+                End If
+                
+            End If
+            
+        End If
+        
+    Next r
+    
+    Application.ScreenUpdating = True
+    
+    MsgBox "Turni generati correttamente dal 04/01/2027.", vbInformation
+
+End Sub
